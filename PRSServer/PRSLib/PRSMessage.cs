@@ -4,6 +4,11 @@
 // CST 415
 // Fall 2019
 // 
+// 
+// Extended by Andy Horn
+// October 2019
+// CST 415 - Assignment 1
+// 
 
 using System;
 using System.Text;

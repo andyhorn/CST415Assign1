@@ -7,6 +7,11 @@
 // Connects to a PRSServer and runs TC1 through TC6
 // Assumes the PRSServer is run with the following command line arguments:
 //     PRSServer.exe -p 30000 -s 40000 -e 40100 -t 10
+// 
+// 
+// Extended by Andy Horn
+// October 2019
+// CST 415 - Assignment 1
 //
 
 using System;
@@ -48,8 +53,10 @@ namespace PRSTestClient
             Console.WriteLine();
 
             // create the socket for sending messages to the server
-            
+            Socket socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
+
             // construct the server's address and port
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(SERVER_IP), SERVER_PORT);
             
             //
             // Implement test cases
@@ -58,6 +65,8 @@ namespace PRSTestClient
             try
             {
                 // call each test case method
+                TestCase1(socket, endPoint);
+                TestCase6(socket, endPoint);
             }
             catch (Exception ex)
             {
@@ -66,6 +75,7 @@ namespace PRSTestClient
             }
 
             // close the client socket and quit
+            socket.Close();
             
             // wait for a keypress from the user before closing the console window
             Console.WriteLine("Press Enter to exit");
@@ -97,7 +107,15 @@ namespace PRSTestClient
             Console.WriteLine("TestCase 1 Started...");
 
             // See test cases doc
-            
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC1", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.KEEP_ALIVE, "SVC1", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC1", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
             Console.WriteLine("TestCase 1 Passed!");
             Console.WriteLine();
         }
@@ -162,13 +180,13 @@ namespace PRSTestClient
 
         private static void TestCase6(Socket clientSocket, IPEndPoint endPt)
         {
-            // TODO: PRSTestClientProgram.TestCase6()
-
             // Simulates a PRS client, M, that tells the PRS to stop
 
             Console.WriteLine("TestCase 6 Started...");
 
             // See test cases doc
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.STOP, "", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, , 0, SUCCESS}");
 
             Console.WriteLine("TestCase 6 Passed!");
             Console.WriteLine();
