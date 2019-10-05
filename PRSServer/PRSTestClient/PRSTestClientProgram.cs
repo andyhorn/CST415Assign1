@@ -66,6 +66,7 @@ namespace PRSTestClient
             {
                 // call each test case method
                 TestCase1(socket, endPoint);
+                TestCase2(socket, endPoint);
                 TestCase6(socket, endPoint);
             }
             catch (Exception ex)
@@ -100,8 +101,6 @@ namespace PRSTestClient
 
         private static void TestCase1(Socket clientSocket, IPEndPoint endPt)
         {
-            // TODO: PRSTestClientProgram.TestCase1()
-
             // Simulates a PRS client, SVC1, that requests a port, keeps it alive and then closes it.
 
             Console.WriteLine("TestCase 1 Started...");
@@ -122,13 +121,18 @@ namespace PRSTestClient
 
         private static void TestCase2(Socket clientSocket, IPEndPoint endPt)
         {
-            // TODO: PRSTestClientProgram.TestCase2()
-
-            // Simulates two PRS clients, SVC1 and C1, where SVC1 requests a port, and C1 looks up the port.
-
+            // See test cases doc
             Console.WriteLine("TestCase 2 Started...");
 
-            // See test cases doc
+            // Simulates two PRS clients, SVC1 and C1, where SVC1 requests a port, and C1 looks up the port.
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC1", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.LOOKUP_PORT, "SVC1", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC1", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
 
             Console.WriteLine("TestCase 2 Passed!");
             Console.WriteLine();

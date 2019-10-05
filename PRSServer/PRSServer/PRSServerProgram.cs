@@ -164,8 +164,8 @@ namespace PRSServer
                             reservation.KeepAlive();
                             response = new PRSMessage(
                                 PRSMessage.MESSAGE_TYPE.RESPONSE
-                                , msg.ServiceName
-                                , msg.Port
+                                , reservation.ServiceName
+                                , reservation.Port
                                 , PRSMessage.STATUS.SUCCESS);
                         }
                         else
@@ -214,8 +214,27 @@ namespace PRSServer
                     {
                         // client wants to know the reserved port number for a named service
                         // find the port
-                        // if found, send port number back
-                        // else, SERVICE_NOT_FOUND
+                        PortReservation reservation = ports.FirstOrDefault(
+                            port => (port.ServiceName == msg.ServiceName));
+
+                        if (reservation != null)
+                        {
+                            // if found, send port number back
+                            response = new PRSMessage(
+                                PRSMessage.MESSAGE_TYPE.RESPONSE
+                                , reservation.ServiceName
+                                , reservation.Port
+                                , PRSMessage.STATUS.SUCCESS);
+                        }
+                        else
+                        {
+                            // else, SERVICE_NOT_FOUND
+                            response = new PRSMessage(
+                                PRSMessage.MESSAGE_TYPE.RESPONSE
+                                , msg.ServiceName
+                                , msg.Port
+                                , PRSMessage.STATUS.SERVICE_NOT_FOUND);
+                        }
                     }
                     break;
 
