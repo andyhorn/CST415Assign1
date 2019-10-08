@@ -67,6 +67,9 @@ namespace PRSTestClient
                 // call each test case method
                 TestCase1(socket, endPoint);
                 TestCase2(socket, endPoint);
+                TestCase3(socket, endPoint);
+                TestCase4(socket, endPoint);
+                TestCase5(socket, endPoint);
                 TestCase6(socket, endPoint);
             }
             catch (Exception ex)
@@ -140,11 +143,20 @@ namespace PRSTestClient
 
         private static void TestCase3(Socket clientSocket, IPEndPoint endPt)
         {
-            // TODO: PRSTestClientProgram.TestCase3()
+            Console.WriteLine("TestCase 3 Started...");
 
             // Simulates two PRS clients, SVC1 and SVC2, where SVC1 requests a port, then SVC2 requests a port and receives its own port.
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC1", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
 
-            Console.WriteLine("TestCase 3 Started...");
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC2", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC2, 40001, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC1", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC2", 40001, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC2, 40001, SUCCESS}");
 
             // See test cases doc
 
@@ -154,14 +166,25 @@ namespace PRSTestClient
 
         private static void TestCase4(Socket clientSocket, IPEndPoint endPt)
         {
-            // TODO: PRSTestClientProgram.TestCase4()
-
             // Simulates two PRS clients, SVC1 and SVC2, where SVC1 requests a port, SVC1 fails to keep the port alive, then SVC2 requests a port and receives SVC1’s expired port.
 
             Console.WriteLine("TestCase 4 Started...");
 
             // See test cases doc
             // use Thread.Sleep();
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC1", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            // Let SCV1 - 40000 expire
+            Console.WriteLine("Sleeping (and expiring)...");
+            Thread.Sleep(15 * 1000);
+
+            // Request a port again, should get 40000 as it has expired
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC2", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC2, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC2", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC2, 40000, SUCCESS}");
 
             Console.WriteLine("TestCase 4 Passed!");
             Console.WriteLine();
@@ -177,6 +200,30 @@ namespace PRSTestClient
 
             // See test cases doc
             // use Thread.Sleep();
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC1", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            Console.WriteLine("Sleeping...");
+            // Sleep, then send a KeepAlive
+            Thread.Sleep(8 * 1000);
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.KEEP_ALIVE, "SVC1", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            // Sleep again for another 8 seconds
+            // If the KeepAlive doesn't work, this will cause the reservation to timeout
+            Console.WriteLine("Sleeping...");
+            Thread.Sleep(8 * 1000);
+
+            // Request a new port, should get 40001
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.REQUEST_PORT, "SVC2", 0, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC2, 40001, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC1", 40000, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC1, 40000, SUCCESS}");
+
+            SendMessage(clientSocket, endPt, new PRSMessage(PRSMessage.MESSAGE_TYPE.CLOSE_PORT, "SVC2", 40001, 0));
+            ExpectMessage(clientSocket, "{RESPONSE, SVC2, 40001, SUCCESS}");
 
             Console.WriteLine("TestCase 5 Passed!");
             Console.WriteLine();

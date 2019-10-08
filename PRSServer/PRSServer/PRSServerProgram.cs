@@ -43,10 +43,8 @@ namespace PRSServer
 
                 public bool Expired(int timeout)
                 {
-                    // TODO: PortReservation.Expired()
                     // return true if timeout seconds have elapsed since lastAlive
-
-                    return false;
+                    return (DateTime.Now - lastAlive).TotalSeconds >= timeout;
                 }
 
                 public void Reserve(string serviceName)
@@ -103,14 +101,14 @@ namespace PRSServer
 
             private void CheckForExpiredPorts()
             {
-                // TODO: PRS.CheckForExpiredPorts()
-                // expire any ports that have not been kept alive
+                foreach (PortReservation port in ports.Where(p => p.Expired(keepAliveTimeout) && !p.Available))
+                {
+                    port.Close();
+                }
             }
 
             private PRSMessage RequestPort(string serviceName)
             {
-                // TODO: PRS.RequestPort()
-
                 PRSMessage response = null;
 
                 // client has requested the lowest available port, so find it!
@@ -264,7 +262,6 @@ namespace PRSServer
 
         static void Main(string[] args)
         {
-            // TODO: PRSServerProgram.Main()
 
             // defaults
             ushort SERVER_PORT = 30000;
@@ -278,7 +275,54 @@ namespace PRSServer
             // -e < ending client port number >
             // -t < keep alive time in seconds >
 
+            for (int i = 0; i < args.Length; i++)
+            {
+                switch (args[i])
+                {
+                    case "-p":
+                    {
+                        SERVER_PORT = ushort.Parse(args[++i]);
+                    }
+                    break;
+                    case "-s":
+                    {
+                        STARTING_CLIENT_PORT = ushort.Parse(args[++i]);
+                    }
+                    break;
+                    case "-e":
+                    {
+                        ENDING_CLIENT_PORT = ushort.Parse(args[++i]);
+                    }
+                    break;
+                    case "-t":
+                    {
+                        KEEP_ALIVE_TIMEOUT = int.Parse(args[++i]);
+                    }
+                    break;
+                    default:
+                    {
+                        Console.WriteLine($"Error: Invalid argument - {args[i]}");
+                        return;
+                    }
+                }
+            }
+
             // check for valid STARTING_CLIENT_PORT and ENDING_CLIENT_PORT
+            if (STARTING_CLIENT_PORT >= ENDING_CLIENT_PORT
+                || STARTING_CLIENT_PORT == 0
+                || ENDING_CLIENT_PORT == 0
+                || STARTING_CLIENT_PORT == SERVER_PORT
+                || ENDING_CLIENT_PORT == SERVER_PORT)
+            {
+                Console.WriteLine("Error: Invalid starting and/or ending port(s)");
+                return;
+            }
+
+            Console.WriteLine("Server starting...");
+            Console.WriteLine($"\tServer port: {SERVER_PORT}");
+            Console.WriteLine($"\tStarting port: {STARTING_CLIENT_PORT}");
+            Console.WriteLine($"\tEnding port: {ENDING_CLIENT_PORT}");
+            Console.WriteLine($"\tTimeout: {KEEP_ALIVE_TIMEOUT}");
 
             // initialize the PRS server
             PRS prs = new PRS(STARTING_CLIENT_PORT, ENDING_CLIENT_PORT, KEEP_ALIVE_TIMEOUT);
@@ -311,7 +355,7 @@ namespace PRSServer
                 catch (Exception ex)
                 {
                     // attempt to send a UNDEFINED_ERROR response to the client, if we know who that was
-
+                    Console.WriteLine(ex.Message);
                 }
             }
 
