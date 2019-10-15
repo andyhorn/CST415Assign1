@@ -32,8 +32,6 @@ namespace PRSTestClient
 
         static void Main(string[] args)
         {
-            // TODO: PRSTestClientProgram.Main()
-
             // defaults
             string SERVER_IP = "127.0.0.1";
             int SERVER_PORT = 30000;
@@ -192,8 +190,6 @@ namespace PRSTestClient
 
         private static void TestCase5(Socket clientSocket, IPEndPoint endPt)
         {
-            // TODO: PRSTestClientProgram.TestCase5()
-
             // Simulates two PRS clients, SVC1 and SVC2, where SVC1 requests a port, SVC1 keeps the port alive, then SVC2 requests a port and receives its own port.
 
             Console.WriteLine("TestCase 5 Started...");

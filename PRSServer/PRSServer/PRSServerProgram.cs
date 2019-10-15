@@ -132,8 +132,6 @@ namespace PRSServer
 
             public PRSMessage HandleMessage(PRSMessage msg)
             {
-                // TODO: PRS.HandleMessage()
-
                 // handle one message and return a response
 
                 PRSMessage response = null;
